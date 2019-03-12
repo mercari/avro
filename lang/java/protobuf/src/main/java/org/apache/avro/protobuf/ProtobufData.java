@@ -228,20 +228,28 @@ public class ProtobufData extends GenericData {
     String p = o.hasJavaPackage()
       ? o.getJavaPackage()
       : fd.getPackage();
-    String outer;
-    if (o.hasJavaOuterClassname()) {
-      outer = o.getJavaOuterClassname();
-    } else {
-      outer = new File(fd.getName()).getName();
-      outer = outer.substring(0, outer.lastIndexOf('.'));
-      outer = toCamelCase(outer);
+    String outer = "";
+    if (!o.getJavaMultipleFiles()) {
+      if (o.hasJavaOuterClassname()) {
+        outer = o.getJavaOuterClassname();
+      } else {
+        outer = new File(fd.getName()).getName();
+        outer = outer.substring(0, outer.lastIndexOf('.'));
+        outer = toCamelCase(outer);
+      }
     }
     String inner = "";
     while (containing != null) {
-      inner = "$" + containing.getName() + inner;
+      if (inner.isEmpty()) {
+        inner = containing.getName();
+      } else {
+        inner = containing.getName() + "$" + inner;
+      }
       containing = containing.getContainingType();
     }
-    return p + "." + outer + inner;
+    String d1 = (!outer.isEmpty() || !inner.isEmpty() ? "." : "");
+    String d2 = (!outer.isEmpty() && !inner.isEmpty() ? "$" : "");
+    return p + d1 + outer + d2 + inner;
   }
 
   private static String toCamelCase(String s){
