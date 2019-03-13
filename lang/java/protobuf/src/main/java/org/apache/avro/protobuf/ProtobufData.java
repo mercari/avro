@@ -31,7 +31,7 @@ import java.io.File;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.generic.GenericData;
-import org.apache.avro.specific.SpecificData;
+import org.apache.avro.protobuf.compat18.Avro19ClassGetter;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
 
@@ -46,11 +46,10 @@ import com.google.protobuf.Descriptors.EnumValueDescriptor;
 import com.google.protobuf.Descriptors.FileDescriptor;
 import com.google.protobuf.DescriptorProtos.FileOptions;
 
-import org.apache.avro.util.internal.Accessor;
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import org.codehaus.jackson.JsonFactory;
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.node.JsonNodeFactory;
 
 /** Utilities for serializing Protobuf data in Avro format. */
 public class ProtobufData extends GenericData {
@@ -135,7 +134,7 @@ public class ProtobufData extends GenericData {
   @Override
   public Object newRecord(Object old, Schema schema) {
     try {
-      Class c = SpecificData.get().getClass(schema);
+      Class c = Avro19ClassGetter.get().getClass(schema);
       if (c == null)
         return newRecord(old, schema);            // punt to generic
       if (c.isInstance(old))
@@ -220,7 +219,7 @@ public class ProtobufData extends GenericData {
 
       List<Field> fields = new ArrayList<>();
       for (FieldDescriptor f : descriptor.getFields())
-        fields.add(Accessor.createField(f.getName(), getSchema(f), null, getDefault(f)));
+        fields.add(new Field(f.getName(), getSchema(f), null, getDefault(f)));
       result.setFields(fields);
       return result;
 

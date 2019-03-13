@@ -78,11 +78,12 @@
     </profile>
   </profiles>
 
+  <!-- For 1.8.2 compatibility -->
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>avro</artifactId>
-      <version>${project.version}</version>
+      <version>1.8.2</version>
     </dependency>
     <dependency>
       <groupId>com.google.protobuf</groupId>
@@ -90,12 +91,14 @@
       <version>${protobuf.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-core</artifactId>
+      <groupId>org.codehaus.jackson</groupId>
+      <artifactId>jackson-core-asl</artifactId>
+      <version>1.9.13</version>
     </dependency>
     <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-databind</artifactId>
+      <groupId>org.codehaus.jackson</groupId>
+      <artifactId>jackson-mapper-asl</artifactId>
+      <version>1.9.13</version>
     </dependency>
   </dependencies>
 
