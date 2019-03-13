@@ -24,6 +24,7 @@ import org.apache.avro.Schema;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.protobuf.compat18.Avro19ClassGetter;
 import org.apache.avro.specific.SpecificData;
 
 import org.junit.Test;
@@ -88,7 +89,7 @@ public class TestProtobuf {
 
   @Test public void testNestedEnum() throws Exception {
     Schema s = ProtobufData.get().getSchema(M.N.class);
-    assertEquals(M.N.class.getName(), SpecificData.get().getClass(s).getName());
+    assertEquals(M.N.class.getName(), Avro19ClassGetter.get().getClass(s).getName());
   }
 
   @Test public void testNestedClassNamespace() throws Exception {
