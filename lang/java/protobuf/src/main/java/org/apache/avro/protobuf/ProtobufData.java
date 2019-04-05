@@ -350,6 +350,7 @@ public class ProtobufData extends GenericData {
     case BOOL:
       return NODES.booleanNode(false);
     case FLOAT: case DOUBLE:
+      return NODES.numberNode(0.0);
     case INT32: case UINT32: case SINT32: case FIXED32: case SFIXED32:
     case INT64: case UINT64: case SINT64: case FIXED64: case SFIXED64:
       return NODES.numberNode(0);
