@@ -26,8 +26,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.FileWriter;
-import java.nio.file.Files;
-
 
 import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileStream;
@@ -73,7 +71,7 @@ public class TestTetherTool {
     String outputPathStr = OUTPUT_DIR.getRoot().getPath();
     Path outputPath = new Path(outputPathStr);
 
-    outputPath.getFileSystem(job).delete(outputPath);
+    outputPath.getFileSystem(job).delete(outputPath, true);
 
     // create the input file
     WordCountUtil.writeLinesFile(inputPathStr + "/lines.avro");
@@ -84,7 +82,6 @@ public class TestTetherTool {
 
     // Create a list of the arguments to pass to the tull run method
     java.util.List<String> runargs = new java.util.ArrayList<>();
-
 
     runargs.addAll(java.util.Arrays.asList("--program", "java"));
     runargs.addAll(asList("--exec_args", '"' + execargs + '"'));
@@ -101,8 +98,7 @@ public class TestTetherTool {
     // validate the output
     int numWords = 0;
     DatumReader<Pair<Utf8, Long>> reader = new SpecificDatumReader<>();
-    try(InputStream cin
-                = new BufferedInputStream(new FileInputStream(outputPathStr + "/part-00000.avro"))) {
+    try (InputStream cin = new BufferedInputStream(new FileInputStream(outputPathStr + "/part-00000.avro"))) {
       DataFileStream<Pair<Utf8, Long>> counts = new DataFileStream<>(cin, reader);
       for (Pair<Utf8, Long> wc : counts) {
         assertEquals(wc.key().toString(), WordCountUtil.COUNTS.get(wc.key().toString()), wc.value());

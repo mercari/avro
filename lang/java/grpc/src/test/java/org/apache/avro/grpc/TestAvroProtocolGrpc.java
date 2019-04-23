@@ -18,7 +18,6 @@
 
 package org.apache.avro.grpc;
 
-import org.apache.avro.AvroRemoteException;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.grpc.test.Kind;
 import org.apache.avro.grpc.test.MD5;
@@ -50,7 +49,7 @@ import static org.junit.Assert.fail;
 
 public class TestAvroProtocolGrpc {
   private final TestRecord record = TestRecord.newBuilder().setName("foo").setKind(Kind.FOO)
-      .setArrayOfLongs(Arrays.asList(42L, 424L, 4242L)).setHash(new MD5(new byte[]{4, 2, 4, 2}))
+      .setArrayOfLongs(Arrays.asList(42L, 424L, 4242L)).setHash(new MD5(new byte[] { 4, 2, 4, 2 }))
       .setNullableHash(null).build();
   private final String declaredErrMsg = "Declared error";
   private final String undeclaredErrMsg = "Undeclared error";
@@ -77,12 +76,11 @@ public class TestAvroProtocolGrpc {
     if (channel != null && !channel.isShutdown()) {
       channel.shutdownNow();
     }
-    server = ServerBuilder.forPort(0)
-        .addService(AvroGrpcServer.createServiceDefinition(TestService.class, serviceImpl))
+    server = ServerBuilder.forPort(0).addService(AvroGrpcServer.createServiceDefinition(TestService.class, serviceImpl))
         .build();
     server.start();
     int port = server.getPort();
-    channel = ManagedChannelBuilder.forAddress("localhost", port).usePlaintext(true).build();
+    channel = ManagedChannelBuilder.forAddress("localhost", port).usePlaintext().build();
     stub = AvroGrpcClient.create(channel, TestService.class);
     callbackStub = AvroGrpcClient.create(channel, TestService.Callback.class);
   }
@@ -111,13 +109,12 @@ public class TestAvroProtocolGrpc {
     Boolean val2 = true;
     long val3 = 123321L;
     int val4 = 42;
-    String result = stub.concatenate(val1, val2, val3, val4);
-    assertEquals(val1 + val2 + val3 + val4, result);
+    assertEquals(val1 + val2 + val3 + val4, stub.concatenate(val1, val2, val3, val4));
   }
 
   @Test
   public void testCallbackInterface() throws Exception {
-    CallFuture<TestRecord> future = new CallFuture<TestRecord>();
+    CallFuture<TestRecord> future = new CallFuture<>();
     callbackStub.echo(record, future);
     assertEquals(record, future.get(1, TimeUnit.SECONDS));
   }
@@ -129,7 +126,7 @@ public class TestAvroProtocolGrpc {
     oneWayCount = new AtomicInteger();
     stub.ping();
     stub.ping();
-    //client is not stalled while server is waiting for processing requests
+    // client is not stalled while server is waiting for processing requests
     assertEquals(0, oneWayCount.get());
     oneWayStart.countDown();
     stub.ping();
@@ -161,18 +158,16 @@ public class TestAvroProtocolGrpc {
   public void testNullableResponse() throws Exception {
     setUpServerAndClient(new TestServiceImplBase() {
       @Override
-      public String concatenate(String val1, boolean val2, long val3, int val4)
-          throws AvroRemoteException {
+      public String concatenate(String val1, boolean val2, long val3, int val4) {
         return null;
       }
     });
-    String response = stub.concatenate("foo", true, 42L, 42);
-    assertEquals(null, response);
+    assertEquals(null, stub.concatenate("foo", true, 42L, 42));
   }
 
   @Test(expected = AvroRuntimeException.class)
   public void testGrpcConnectionError() throws Exception {
-    //close the channel and initiate request
+    // close the channel and initiate request
     channel.shutdownNow();
     stub.add(0, 1, 2);
   }
@@ -194,13 +189,13 @@ public class TestAvroProtocolGrpc {
     ExecutorService es = Executors.newCachedThreadPool();
     Future<TestRecord>[] records = new Future[5];
     Future<Integer>[] adds = new Future[5];
-    //submit requests in parallel
+    // submit requests in parallel
     for (int i = 0; i < 5; i++) {
       records[i] = es.submit(() -> stub.echo(record));
       int j = i;
       adds[i] = es.submit(() -> stub.add(j, 2 * j, 3 * j));
     }
-    //validate all results
+    // validate all results
     for (int i = 0; i < 5; i++) {
       assertEquals(record, records[i].get());
       assertEquals(6 * i, (long) adds[i].get());
@@ -209,19 +204,19 @@ public class TestAvroProtocolGrpc {
 
   @Test
   public void testConcurrentChannels() throws Exception {
-    ManagedChannel otherChannel = ManagedChannelBuilder.forAddress("localhost", server.getPort())
-        .usePlaintext(true).build();
+    ManagedChannel otherChannel = ManagedChannelBuilder.forAddress("localhost", server.getPort()).usePlaintext()
+        .build();
     TestService otherStub = AvroGrpcClient.create(otherChannel, TestService.class);
     Future<Integer>[] adds = new Future[5];
     Future<Integer>[] otherAdds = new Future[5];
     ExecutorService es = Executors.newCachedThreadPool();
-    //submit requests on clients with different channels
+    // submit requests on clients with different channels
     for (int i = 0; i < 5; i++) {
       int j = i;
       adds[i] = es.submit(() -> stub.add(j, j - 1, j - 2));
       otherAdds[i] = es.submit(() -> otherStub.add(j, j + 1, j + 2));
     }
-    //validate all results
+    // validate all results
     for (int i = 0; i < 5; i++) {
       assertEquals((3 * i) - 3, (long) adds[i].get());
       assertEquals((3 * i) + 3, (long) otherAdds[i].get());
@@ -231,17 +226,17 @@ public class TestAvroProtocolGrpc {
 
   private class TestServiceImplBase implements TestService {
     @Override
-    public TestRecord echo(TestRecord record) throws AvroRemoteException {
+    public TestRecord echo(TestRecord record) {
       return record;
     }
 
     @Override
-    public int add(int arg1, int arg2, int arg3) throws AvroRemoteException {
+    public int add(int arg1, int arg2, int arg3) {
       return arg1 + arg2 + arg3;
     }
 
     @Override
-    public void error(boolean declared) throws AvroRemoteException, TestError {
+    public void error(boolean declared) throws TestError {
       if (declared) {
         throw declaredError;
       }
@@ -260,7 +255,7 @@ public class TestAvroProtocolGrpc {
     }
 
     @Override
-    public String concatenate(String val1, boolean val2, long val3, int val4) throws AvroRemoteException {
+    public String concatenate(String val1, boolean val2, long val3, int val4) {
       return val1 + val2 + val3 + val4;
     }
   }

@@ -54,56 +54,47 @@ import org.slf4j.LoggerFactory;
  * A Netty-based RPC {@link Server} implementation.
  */
 public class NettyServer implements Server {
-  private static final Logger LOG = LoggerFactory.getLogger(NettyServer.class
-      .getName());
+  private static final Logger LOG = LoggerFactory.getLogger(NettyServer.class.getName());
 
   private final Responder responder;
 
   private final Channel serverChannel;
-  private final ChannelGroup allChannels = new DefaultChannelGroup(
-      "avro-netty-server");
+  private final ChannelGroup allChannels = new DefaultChannelGroup("avro-netty-server");
   private final ChannelFactory channelFactory;
   private final CountDownLatch closed = new CountDownLatch(1);
-  private final ExecutionHandler executionHandler;
 
   public NettyServer(Responder responder, InetSocketAddress addr) {
-    this(responder, addr, new NioServerSocketChannelFactory
-         (Executors .newCachedThreadPool(), Executors.newCachedThreadPool()));
+    this(responder, addr,
+        new NioServerSocketChannelFactory(Executors.newCachedThreadPool(), Executors.newCachedThreadPool()));
   }
 
-  public NettyServer(Responder responder, InetSocketAddress addr,
-                     ChannelFactory channelFactory) {
-      this(responder, addr, channelFactory, null);
+  public NettyServer(Responder responder, InetSocketAddress addr, ChannelFactory channelFactory) {
+    this(responder, addr, channelFactory, null);
   }
 
   /**
    * @param executionHandler if not null, will be inserted into the Netty
-   *                         pipeline. Use this when your responder does
-   *                         long, non-cpu bound processing (see Netty's
+   *                         pipeline. Use this when your responder does long,
+   *                         non-cpu bound processing (see Netty's
    *                         ExecutionHandler javadoc).
-   * @param pipelineFactory  Avro-related handlers will be added on top of
-   *                         what this factory creates
+   * @param pipelineFactory  Avro-related handlers will be added on top of what
+   *                         this factory creates
    */
-  public NettyServer(Responder responder, InetSocketAddress addr,
-                     ChannelFactory channelFactory,
-                     final ChannelPipelineFactory pipelineFactory,
-                     final ExecutionHandler executionHandler) {
+  public NettyServer(Responder responder, InetSocketAddress addr, ChannelFactory channelFactory,
+      final ChannelPipelineFactory pipelineFactory, final ExecutionHandler executionHandler) {
     this.responder = responder;
     this.channelFactory = channelFactory;
-    this.executionHandler = executionHandler;
+    ExecutionHandler executionHandler1 = executionHandler;
     ServerBootstrap bootstrap = new ServerBootstrap(channelFactory);
-    bootstrap.setPipelineFactory(new ChannelPipelineFactory() {
-      @Override
-      public ChannelPipeline getPipeline() throws Exception {
-        ChannelPipeline p = pipelineFactory.getPipeline();
-        p.addLast("frameDecoder", new NettyFrameDecoder());
-        p.addLast("frameEncoder", new NettyFrameEncoder());
-        if (executionHandler != null) {
-          p.addLast("executionHandler", executionHandler);
-        }
-        p.addLast("handler", new NettyServerAvroHandler());
-        return p;
+    bootstrap.setPipelineFactory(() -> {
+      ChannelPipeline p = pipelineFactory.getPipeline();
+      p.addLast("frameDecoder", new NettyFrameDecoder());
+      p.addLast("frameEncoder", new NettyFrameEncoder());
+      if (executionHandler != null) {
+        p.addLast("executionHandler", executionHandler);
       }
+      p.addLast("handler", new NettyServerAvroHandler());
+      return p;
     });
     serverChannel = bootstrap.bind(addr);
     allChannels.add(serverChannel);
@@ -111,19 +102,13 @@ public class NettyServer implements Server {
 
   /**
    * @param executionHandler if not null, will be inserted into the Netty
-   *                         pipeline. Use this when your responder does
-   *                         long, non-cpu bound processing (see Netty's
+   *                         pipeline. Use this when your responder does long,
+   *                         non-cpu bound processing (see Netty's
    *                         ExecutionHandler javadoc).
    */
-  public NettyServer(Responder responder, InetSocketAddress addr,
-                     ChannelFactory channelFactory,
-                     final ExecutionHandler executionHandler) {
-    this(responder, addr, channelFactory, new ChannelPipelineFactory() {
-      @Override
-      public ChannelPipeline getPipeline() throws Exception {
-        return Channels.pipeline();
-      }
-    }, executionHandler);
+  public NettyServer(Responder responder, InetSocketAddress addr, ChannelFactory channelFactory,
+      final ExecutionHandler executionHandler) {
+    this(responder, addr, channelFactory, Channels::pipeline, executionHandler);
   }
 
   @Override
@@ -154,8 +139,8 @@ public class NettyServer implements Server {
    * @return The number of clients currently connected to this server.
    */
   public int getNumActiveConnections() {
-    //allChannels also contains the server channel, so exclude that from the
-    //count.
+    // allChannels also contains the server channel, so exclude that from the
+    // count.
     return allChannels.size() - 1;
   }
 
@@ -167,8 +152,7 @@ public class NettyServer implements Server {
     private NettyTransceiver connectionMetadata = new NettyTransceiver();
 
     @Override
-    public void handleUpstream(ChannelHandlerContext ctx, ChannelEvent e)
-        throws Exception {
+    public void handleUpstream(ChannelHandlerContext ctx, ChannelEvent e) throws Exception {
       if (e instanceof ChannelStateEvent) {
         LOG.info(e.toString());
       }
@@ -176,8 +160,7 @@ public class NettyServer implements Server {
     }
 
     @Override
-    public void channelOpen(ChannelHandlerContext ctx, ChannelStateEvent e)
-        throws Exception {
+    public void channelOpen(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
       allChannels.add(e.getChannel());
       super.channelOpen(ctx, e);
     }
@@ -189,7 +172,7 @@ public class NettyServer implements Server {
         List<ByteBuffer> req = dataPack.getDatas();
         List<ByteBuffer> res = responder.respond(req, connectionMetadata);
         // response will be null for oneway messages.
-        if(res != null) {
+        if (res != null) {
           dataPack.setDatas(res);
           e.getChannel().write(dataPack);
         }
@@ -206,10 +189,8 @@ public class NettyServer implements Server {
     }
 
     @Override
-    public void channelClosed(
-            ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-      LOG.info("Connection to {} disconnected.",
-              e.getChannel().getRemoteAddress());
+    public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
+      LOG.info("Connection to {} disconnected.", e.getChannel().getRemoteAddress());
       super.channelClosed(ctx, e);
       e.getChannel().close();
       allChannels.remove(e.getChannel());

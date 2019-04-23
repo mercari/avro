@@ -41,12 +41,12 @@ public class SchemaMojo extends AbstractAvroMojo {
    * A parser used to parse all schema files. Using a common parser will
    * facilitate the import of external schemas.
    */
-   private Schema.Parser schemaParser = new Schema.Parser();
+  private Schema.Parser schemaParser = new Schema.Parser();
 
-   /**
+  /**
    * A set of Ant-like inclusion patterns used to select files from the source
-   * directory for processing. By default, the pattern
-   * <code>**&#47;*.avsc</code> is used to select grammar files.
+   * directory for processing. By default, the pattern <code>**&#47;*.avsc</code>
+   * is used to select grammar files.
    *
    * @parameter
    */
@@ -54,8 +54,8 @@ public class SchemaMojo extends AbstractAvroMojo {
 
   /**
    * A set of Ant-like inclusion patterns used to select files from the source
-   * directory for processing. By default, the pattern
-   * <code>**&#47;*.avsc</code> is used to select grammar files.
+   * directory for processing. By default, the pattern <code>**&#47;*.avsc</code>
+   * is used to select grammar files.
    *
    * @parameter
    */
@@ -89,9 +89,7 @@ public class SchemaMojo extends AbstractAvroMojo {
       for (String customConversion : customConversions) {
         compiler.addCustomConversion(classLoader.loadClass(customConversion));
       }
-    } catch (ClassNotFoundException e) {
-      throw new IOException(e);
-    } catch (DependencyResolutionRequiredException e) {
+    } catch (ClassNotFoundException | DependencyResolutionRequiredException e) {
       throw new IOException(e);
     }
     compiler.setOutputCharacterEncoding(project.getProperties().getProperty("project.build.sourceEncoding"));

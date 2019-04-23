@@ -30,10 +30,11 @@
   <artifactId>avro-mapred</artifactId>
 
   <name>Apache Avro Mapred API</name>
-  <description>An org.apache.hadoop.mapred compatible API for using Avro Serializatin in Hadoop</description>
+  <description>An org.apache.hadoop.mapred compatible API for using Avro Serialization in Hadoop</description>
   <packaging>bundle</packaging>
 
   <properties>
+    <main.basedir>${project.parent.parent.basedir}</main.basedir>
     <osgi.import>
       !org.apache.avro.mapred*,
       org.apache.avro*;version="${project.version}",
@@ -51,12 +52,26 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
-        <version>${jar-plugin.version}</version>
+      </plugin>
+      <!-- Allow guava because hadoop brings it as a transitive dependency. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
         <executions>
           <execution>
+            <id>enforce-banned-dependencies</id>
             <goals>
-              <goal>test-jar</goal>
+              <goal>enforce</goal>
             </goals>
+            <configuration>
+              <rules>
+                <bannedDependencies>
+                  <includes>
+                    <exclude>com.google.guava:guava</exclude>
+                  </includes>
+                </bannedDependencies>
+              </rules>
+            </configuration>
           </execution>
         </executions>
       </plugin>
@@ -148,7 +163,6 @@
     <dependency>
       <groupId>org.hamcrest</groupId>
       <artifactId>hamcrest-library</artifactId>
-      <version>${hamcrest.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -167,7 +181,6 @@
         <artifactId>snappy-java</artifactId>
         <scope>test</scope>
     </dependency>
-
   </dependencies>
 </project>
 

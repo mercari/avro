@@ -55,7 +55,8 @@ public class AvroResponseMarshaller implements MethodDescriptor.Marshaller<Objec
   @Override
   public Object parse(InputStream stream) {
     try {
-      if (message.isOneWay()) return null;
+      if (message.isOneWay())
+        return null;
       BinaryDecoder in = DECODER_FACTORY.binaryDecoder(stream, null);
       if (!in.readBoolean()) {
         Object response = new SpecificDatumReader(message.getResponse()).read(null, in);
@@ -68,14 +69,13 @@ public class AvroResponseMarshaller implements MethodDescriptor.Marshaller<Objec
         return new AvroRuntimeException(value.toString());
       }
     } catch (IOException e) {
-      throw Status.INTERNAL.withCause(e).
-          withDescription("Error deserializing avro response").asRuntimeException();
+      throw Status.INTERNAL.withCause(e).withDescription("Error deserializing avro response").asRuntimeException();
     } finally {
       AvroGrpcUtils.skipAndCloseQuietly(stream);
     }
   }
 
-  private class AvroResponseInputStream extends AvroInputStream {
+  private static class AvroResponseInputStream extends AvroInputStream {
     private final Protocol.Message message;
     private Object response;
 

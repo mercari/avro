@@ -24,12 +24,9 @@ import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.yarn.webapp.hamlet.Hamlet;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-
-import java.nio.file.Files;
 
 public class TestAvroTextSort {
 
@@ -41,14 +38,14 @@ public class TestAvroTextSort {
 
   @Test
   /**
-   * Run the identity job on a "bytes" Avro file using AvroAsTextInputFormat
-   * and AvroTextOutputFormat to produce a sorted "bytes" Avro file.
+   * Run the identity job on a "bytes" Avro file using AvroAsTextInputFormat and
+   * AvroTextOutputFormat to produce a sorted "bytes" Avro file.
    */
   public void testSort() throws Exception {
     JobConf job = new JobConf();
     String inputPath = INPUT_DIR.getRoot().getPath();
     Path outputPath = new Path(OUTPUT_DIR.getRoot().getPath());
-    outputPath.getFileSystem(job).delete(outputPath);
+    outputPath.getFileSystem(job).delete(outputPath, true);
 
     WordCountUtil.writeLinesBytesFile(inputPath);
 

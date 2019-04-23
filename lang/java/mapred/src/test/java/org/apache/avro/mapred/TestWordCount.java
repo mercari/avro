@@ -18,7 +18,8 @@
 
 package org.apache.avro.mapred;
 
-import junit.framework.Assert;
+import static org.junit.Assert.assertEquals;
+
 import org.apache.avro.Schema;
 import org.apache.avro.util.Utf8;
 import org.apache.hadoop.fs.FileStatus;
@@ -44,20 +45,17 @@ public class TestWordCount {
 
   public static class MapImpl extends AvroMapper<Utf8, Pair<Utf8, Long>> {
     @Override
-    public void map(Utf8 text, AvroCollector<Pair<Utf8, Long>> collector,
-                    Reporter reporter) throws IOException {
+    public void map(Utf8 text, AvroCollector<Pair<Utf8, Long>> collector, Reporter reporter) throws IOException {
       StringTokenizer tokens = new StringTokenizer(text.toString());
       while (tokens.hasMoreTokens())
         collector.collect(new Pair<>(new Utf8(tokens.nextToken()), 1L));
     }
   }
 
-  public static class ReduceImpl
-          extends AvroReducer<Utf8, Long, Pair<Utf8, Long>> {
+  public static class ReduceImpl extends AvroReducer<Utf8, Long, Pair<Utf8, Long>> {
     @Override
-    public void reduce(Utf8 word, Iterable<Long> counts,
-                       AvroCollector<Pair<Utf8, Long>> collector,
-                       Reporter reporter) throws IOException {
+    public void reduce(Utf8 word, Iterable<Long> counts, AvroCollector<Pair<Utf8, Long>> collector, Reporter reporter)
+        throws IOException {
       long sum = 0;
       for (long count : counts)
         sum += count;
@@ -108,13 +106,8 @@ public class TestWordCount {
 
     Integer defaultRank = -1;
 
-    String jsonSchema =
-            "{\"type\":\"record\"," +
-                    "\"name\":\"org.apache.avro.mapred.Pair\"," +
-                    "\"fields\": [ " +
-                    "{\"name\":\"rank\", \"type\":\"int\", \"default\": -1}," +
-                    "{\"name\":\"value\", \"type\":\"long\"}" +
-                    "]}";
+    String jsonSchema = "{\"type\":\"record\"," + "\"name\":\"org.apache.avro.mapred.Pair\"," + "\"fields\": [ "
+        + "{\"name\":\"rank\", \"type\":\"int\", \"default\": -1}," + "{\"name\":\"value\", \"type\":\"long\"}" + "]}";
 
     Schema readerSchema = Schema.parse(jsonSchema);
 
@@ -132,19 +125,19 @@ public class TestWordCount {
     long sumOfCounts = 0;
     long numOfCounts = 0;
     while (recordReader.next(inputPair, ignore)) {
-      Assert.assertEquals(inputPair.datum().get(0), defaultRank);
+      assertEquals(inputPair.datum().get(0), defaultRank);
       sumOfCounts += (Long) inputPair.datum().get(1);
       numOfCounts++;
     }
 
-    Assert.assertEquals(numOfCounts, WordCountUtil.COUNTS.size());
+    assertEquals(numOfCounts, WordCountUtil.COUNTS.size());
 
     long actualSumOfCounts = 0;
     for (Long count : WordCountUtil.COUNTS.values()) {
       actualSumOfCounts += count;
     }
 
-    Assert.assertEquals(sumOfCounts, actualSumOfCounts);
+    assertEquals(sumOfCounts, actualSumOfCounts);
   }
 
 }

@@ -19,12 +19,10 @@ package org.apache.avro.data;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringReader;
 import java.util.Iterator;
 
 import org.apache.avro.util.internal.JacksonUtils;
 import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -47,7 +45,8 @@ import org.apache.avro.io.ResolvingDecoder;
 
 /** Utilities for reading and writing arbitrary Json data in Avro format. */
 public class Json {
-  private Json() {}                               // singleton: no public ctor
+  private Json() {
+  } // singleton: no public ctor
 
   static final JsonFactory FACTORY = new JsonFactory();
   static final ObjectMapper MAPPER = new ObjectMapper(FACTORY);
@@ -56,24 +55,24 @@ public class Json {
   public static final Schema SCHEMA;
   static {
     try {
-      InputStream in = Json.class.getResourceAsStream("/org/apache/avro/data/Json.avsc");
-      try {
-        SCHEMA = Schema.parse(in);
-      } finally {
-        in.close();
+      try (InputStream in = Json.class.getResourceAsStream("/org/apache/avro/data/Json.avsc")) {
+        SCHEMA = new Schema.Parser().parse(in);
       }
     } catch (IOException e) {
       throw new AvroRuntimeException(e);
     }
   }
 
-  /** {@link DatumWriter} for arbitrary Json data using the object model described
-   *  in {@link org.apache.avro.JsonProperties}. */
+  /**
+   * {@link DatumWriter} for arbitrary Json data using the object model described
+   * in {@link org.apache.avro.JsonProperties}.
+   */
   public static class ObjectWriter implements DatumWriter<Object> {
 
-    @Override public void setSchema(Schema schema) {
+    @Override
+    public void setSchema(Schema schema) {
       if (!SCHEMA.equals(schema))
-        throw new RuntimeException("Not the Json schema: "+schema);
+        throw new RuntimeException("Not the Json schema: " + schema);
     }
 
     @Override
@@ -82,19 +81,22 @@ public class Json {
     }
   }
 
-  /** {@link DatumReader} for arbitrary Json data using the object model described
-   *  in {@link org.apache.avro.JsonProperties}. */
+  /**
+   * {@link DatumReader} for arbitrary Json data using the object model described
+   * in {@link org.apache.avro.JsonProperties}.
+   */
   public static class ObjectReader implements DatumReader<Object> {
     private Schema written;
     private ResolvingDecoder resolver;
 
-    @Override public void setSchema(Schema schema) {
+    @Override
+    public void setSchema(Schema schema) {
       this.written = SCHEMA.equals(written) ? null : schema;
     }
 
     @Override
     public Object read(Object reuse, Decoder in) throws IOException {
-      if (written == null)                        // same schema
+      if (written == null) // same schema
         return Json.readObject(in);
 
       // use a resolver to adapt alternate version of Json schema
@@ -113,10 +115,7 @@ public class Json {
    */
   public static Object parseJson(String s) {
     try {
-      return JacksonUtils.toObject(MAPPER.readTree(FACTORY.createJsonParser(
-          new StringReader(s))));
-    } catch (JsonParseException e) {
-      throw new RuntimeException(e);
+      return JacksonUtils.toObject(MAPPER.readTree(FACTORY.createParser(s)));
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -131,13 +130,15 @@ public class Json {
   }
 
   /** Note: this enum must be kept aligned with the union in Json.avsc. */
-  private enum JsonType { LONG, DOUBLE, STRING, BOOLEAN, NULL, ARRAY, OBJECT }
+  private enum JsonType {
+    LONG, DOUBLE, STRING, BOOLEAN, NULL, ARRAY, OBJECT
+  }
 
   /**
    * Write Json data as Avro data.
    */
   private static void write(JsonNode node, Encoder out) throws IOException {
-    switch(node.asToken()) {
+    switch (node.asToken()) {
     case VALUE_NUMBER_INT:
       out.writeIndex(JsonType.LONG.ordinal());
       out.writeLong(node.longValue());
@@ -186,7 +187,7 @@ public class Json {
       out.writeMapEnd();
       break;
     default:
-      throw new AvroRuntimeException(node.asToken()+" unexpected: "+node);
+      throw new AvroRuntimeException(node.asToken() + " unexpected: " + node);
     }
   }
 
@@ -216,7 +217,7 @@ public class Json {
       ObjectNode object = JsonNodeFactory.instance.objectNode();
       for (long l = in.readMapStart(); l > 0; l = in.mapNext())
         for (long i = 0; i < l; i++)
-          object.put(in.readString(), read(in));
+          object.set(in.readString(), read(in));
       return object;
     default:
       throw new AvroRuntimeException("Unexpected Json node type");

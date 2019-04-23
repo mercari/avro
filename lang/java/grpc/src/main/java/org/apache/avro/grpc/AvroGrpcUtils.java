@@ -29,14 +29,14 @@ import io.grpc.KnownLength;
 
 /** Utility methods for using Avro IDL and serialization with gRPC. */
 public final class AvroGrpcUtils {
-  private static Logger log = Logger.getLogger(AvroGrpcUtils.class.getName());
+  private static final Logger LOG = Logger.getLogger(AvroGrpcUtils.class.getName());
 
   private AvroGrpcUtils() {
   }
 
   /**
-   * Provides a a unique gRPC service name for Avro RPC interface or its subclass Callback
-   * Interface.
+   * Provides a a unique gRPC service name for Avro RPC interface or its subclass
+   * Callback Interface.
    *
    * @param iface Avro RPC interface.
    * @return unique service name for gRPC.
@@ -68,7 +68,8 @@ public final class AvroGrpcUtils {
       if (stream instanceof KnownLength && stream.available() > 0) {
         stream.skip(stream.available());
       } else {
-        //don't expect this for an inputStream provided by gRPC but just to be on safe side.
+        // don't expect this for an inputStream provided by gRPC but just to be on safe
+        // side.
         byte[] skipBuffer = new byte[4096];
         while (true) {
           int read = stream.read(skipBuffer);
@@ -79,7 +80,7 @@ public final class AvroGrpcUtils {
       }
       stream.close();
     } catch (Exception e) {
-      log.log(Level.WARNING, "failed to skip/close the input stream, may cause memory leak", e);
+      LOG.log(Level.WARNING, "failed to skip/close the input stream, may cause memory leak", e);
     }
   }
 }

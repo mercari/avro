@@ -24,7 +24,8 @@ public class ByteBufferRecord {
   private ByteBuffer payload;
   private TypeEnum tp;
 
-  public ByteBufferRecord() { }
+  public ByteBufferRecord() {
+  }
 
   public ByteBuffer getPayload() {
     return payload;
@@ -44,15 +45,18 @@ public class ByteBufferRecord {
 
   @Override
   public boolean equals(Object ob) {
-    if (this == ob) return true;
+    if (this == ob)
+      return true;
     if (!(ob instanceof ByteBufferRecord))
       return false;
-    ByteBufferRecord that = (ByteBufferRecord)ob;
-    if (this.getPayload() == null) return that.getPayload() == null;
-    if (!this.getPayload().equals(that.getPayload())) return false;
-    if (this.getTp() == null) return that.getTp() == null;
-    if (!this.getTp().equals(that.getTp())) return false;
-    return true;
+    ByteBufferRecord that = (ByteBufferRecord) ob;
+    if (this.getPayload() == null)
+      return that.getPayload() == null;
+    if (!this.getPayload().equals(that.getPayload()))
+      return false;
+    if (this.getTp() == null)
+      return that.getTp() == null;
+    return this.getTp().equals(that.getTp());
   }
 
   @Override

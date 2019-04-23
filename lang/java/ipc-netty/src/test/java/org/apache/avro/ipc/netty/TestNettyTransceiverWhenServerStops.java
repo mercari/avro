@@ -33,7 +33,7 @@ import static org.junit.Assert.fail;
 
 public class TestNettyTransceiverWhenServerStops {
 //  @Test                                           // disable flakey test!
-    public void testNettyTransceiverWhenServerStops() throws Exception {
+  public void testNettyTransceiverWhenServerStops() throws Exception {
     Mail mailService = new TestNettyServer.MailImpl();
     Responder responder = new SpecificResponder(Mail.class, mailService);
     NettyServer server = new NettyServer(responder, new InetSocketAddress(0));
@@ -51,22 +51,19 @@ public class TestNettyTransceiverWhenServerStops {
 
     // Start a bunch of client threads that use the transceiver to send messages
     for (int i = 0; i < 100; i++) {
-      Thread thread = new Thread(new Runnable() {
-          @Override
-            public void run() {
-            while (true) {
-              try {
-                mail.send(createMessage());
-                successes.incrementAndGet();
-              } catch (Exception e) {
-                failures.incrementAndGet();
-                if (quitOnFailure.get()) {
-                  return;
-                }
-              }
+      Thread thread = new Thread(() -> {
+        while (true) {
+          try {
+            mail.send(createMessage());
+            successes.incrementAndGet();
+          } catch (Exception e) {
+            failures.incrementAndGet();
+            if (quitOnFailure.get()) {
+              return;
             }
           }
-        });
+        }
+      });
       threads.add(thread);
       thread.start();
     }
@@ -79,7 +76,8 @@ public class TestNettyTransceiverWhenServerStops {
     // Now stop the server
     server.close();
 
-    // Server is stopped: successes should not increase anymore: wait until we're in that situation
+    // Server is stopped: successes should not increase anymore: wait until we're in
+    // that situation
     while (true) {
       int previousSuccesses = successes.get();
       Thread.sleep(500);
@@ -91,24 +89,18 @@ public class TestNettyTransceiverWhenServerStops {
     // Start the server again
     server.start();
 
-    // This part of the test is not solved by the current patch: it shows that when you stop/start
-    // a server, the client requests don't continue immediately but will stay blocked until the timeout
+    // This part of the test is not solved by the current patch: it shows that when
+    // you stop/start
+    // a server, the client requests don't continue immediately but will stay
+    // blocked until the timeout
     // passed to the NettyTransceiver has passed (IIUC)
     long now = System.currentTimeMillis();
     /*
-      System.out.println("Waiting on requests to continue");
-      int previousSuccesses = successes.get();
-      while (true) {
-      Thread.sleep(500);
-      if (successes.get() > previousSuccesses) {
-      break;
-      }
-      if (System.currentTimeMillis() - now > 5000) {
-      System.out.println("FYI: requests don't continue immediately...");
-      break;
-      }
-      }
-    */
+     * System.out.println("Waiting on requests to continue"); int previousSuccesses
+     * = successes.get(); while (true) { Thread.sleep(500); if (successes.get() >
+     * previousSuccesses) { break; } if (System.currentTimeMillis() - now > 5000) {
+     * System.out.println("FYI: requests don't continue immediately..."); break; } }
+     */
 
     // Stop our client, we would expect this to go on immediately
     System.out.println("Stopping transceiver");
@@ -124,16 +116,12 @@ public class TestNettyTransceiverWhenServerStops {
       fail("Stopping NettyTransceiver and waiting for client threads to quit took too long.");
     } else {
       System.out.println("Stopping NettyTransceiver and waiting for client threads to quit took "
-                         + (System.currentTimeMillis() - now) + " ms");
+          + (System.currentTimeMillis() - now) + " ms");
     }
   }
 
   private Message createMessage() {
-    Message msg = Message.newBuilder().
-      setTo("wife").
-      setFrom("husband").
-      setBody("I love you!").
-      build();
+    Message msg = Message.newBuilder().setTo("wife").setFrom("husband").setBody("I love you!").build();
     return msg;
   }
 }

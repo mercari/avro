@@ -27,7 +27,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 /**
  * This is a very specific test that verifies that if the NettyTransceiver fails
@@ -35,46 +35,37 @@ import static org.junit.Assert.assertEquals;
  */
 public class NettyTransceiverWhenFailsToConnect {
 
-    @Test(expected = IOException.class)
-    public void testNettyTransceiverReleasesNettyChannelOnFailingToConnect() throws Exception {
-        ServerSocket serverSocket = null;
-        LastChannelRememberingChannelFactory socketChannelFactory = null;
+  @Test(expected = IOException.class)
+  public void testNettyTransceiverReleasesNettyChannelOnFailingToConnect() throws Exception {
 
-        try {
-            serverSocket = new ServerSocket(0);
-            socketChannelFactory = new LastChannelRememberingChannelFactory();
+    LastChannelRememberingChannelFactory socketChannelFactory = null;
+    try (ServerSocket serverSocket = new ServerSocket(0)) {
+      socketChannelFactory = new LastChannelRememberingChannelFactory();
 
-            try {
-                new NettyTransceiver(
-                        new InetSocketAddress(serverSocket.getLocalPort()),
-                        socketChannelFactory,
-                        1L
-                );
-            } finally {
-                assertEquals("expected that the channel opened by the transceiver is closed",
-                        false, socketChannelFactory.lastChannel.isOpen());
-            }
-        } finally {
+      try {
+        new NettyTransceiver(new InetSocketAddress(serverSocket.getLocalPort()), socketChannelFactory, 1L);
+      } finally {
+        assertFalse("expected that the channel opened by the transceiver is closed",
+            socketChannelFactory.lastChannel.isOpen());
+      }
+    } finally {
 
-            if (serverSocket != null) {
-                // closing the server socket will actually free up the open channel in the
-                // transceiver, which would have hung otherwise (pre AVRO-1407)
-                serverSocket.close();
-            }
+      // closing the server socket will actually free up the open channel in the
+      // transceiver, which would have hung otherwise (pre AVRO-1407)
 
-            if (socketChannelFactory != null) {
-                socketChannelFactory.releaseExternalResources();
-            }
-        }
+      if (socketChannelFactory != null) {
+        socketChannelFactory.releaseExternalResources();
+      }
     }
+  }
 
-    class LastChannelRememberingChannelFactory extends NioClientSocketChannelFactory implements ChannelFactory {
+  class LastChannelRememberingChannelFactory extends NioClientSocketChannelFactory implements ChannelFactory {
 
-        volatile SocketChannel lastChannel;
+    volatile SocketChannel lastChannel;
 
-        @Override
-        public SocketChannel newChannel(ChannelPipeline pipeline) {
-            return lastChannel= super.newChannel(pipeline);
-        }
+    @Override
+    public SocketChannel newChannel(ChannelPipeline pipeline) {
+      return lastChannel = super.newChannel(pipeline);
     }
+  }
 }

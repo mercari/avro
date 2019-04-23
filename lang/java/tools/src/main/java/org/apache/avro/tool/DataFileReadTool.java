@@ -51,17 +51,15 @@ public class DataFileReadTool implements Tool {
   }
 
   @Override
-  public int run(InputStream stdin, PrintStream out, PrintStream err,
-      List<String> args) throws Exception {
+  public int run(InputStream stdin, PrintStream out, PrintStream err, List<String> args) throws Exception {
     OptionParser optionParser = new OptionParser();
-    OptionSpec<Void> prettyOption = optionParser
-        .accepts("pretty", "Turns on pretty printing.");
+    OptionSpec<Void> prettyOption = optionParser.accepts("pretty", "Turns on pretty printing.");
     String headDesc = String.format("Converts the first X records (default is %d).", DEFAULT_HEAD_COUNT);
     OptionSpec<String> headOption = optionParser.accepts("head", headDesc).withOptionalArg();
 
     OptionSet optionSet = optionParser.parse(args.toArray(new String[0]));
     Boolean pretty = optionSet.has(prettyOption);
-    List<String> nargs = new ArrayList<String>((List<String>)optionSet.nonOptionArguments());
+    List<String> nargs = new ArrayList<>((List<String>) optionSet.nonOptionArguments());
 
     long headCount = getHeadCount(optionSet, headOption, nargs);
 
@@ -75,37 +73,36 @@ public class DataFileReadTool implements Tool {
     BufferedInputStream inStream = Util.fileOrStdin(nargs.get(0), stdin);
 
     GenericDatumReader<Object> reader = new GenericDatumReader<>();
-    DataFileStream<Object> streamReader = new DataFileStream<>(inStream, reader);
-    try {
+    try (DataFileStream<Object> streamReader = new DataFileStream<>(inStream, reader)) {
       Schema schema = streamReader.getSchema();
       DatumWriter<Object> writer = new GenericDatumWriter<>(schema);
       JsonEncoder encoder = EncoderFactory.get().jsonEncoder(schema, out, pretty);
-      for(long recordCount = 0; streamReader.hasNext() && recordCount < headCount; recordCount++) {
+      for (long recordCount = 0; streamReader.hasNext() && recordCount < headCount; recordCount++) {
         Object datum = streamReader.next();
         writer.write(datum, encoder);
       }
       encoder.flush();
       out.println();
       out.flush();
-    } finally {
-      streamReader.close();
     }
     return 0;
   }
 
   private static long getHeadCount(OptionSet optionSet, OptionSpec<String> headOption, List<String> nargs) {
     long headCount = Long.MAX_VALUE;
-    if(optionSet.has(headOption)) {
+    if (optionSet.has(headOption)) {
       headCount = DEFAULT_HEAD_COUNT;
       List<String> headValues = optionSet.valuesOf(headOption);
-      if(headValues.size() > 0) {
+      if (headValues.size() > 0) {
         // if the value parses to int, assume it's meant to go with --head
-        // otherwise assume it was an optionSet.nonOptionArgument and add back to the list
+        // otherwise assume it was an optionSet.nonOptionArgument and add back to the
+        // list
         // TODO: support input filenames whose whole path+name is int parsable?
         try {
           headCount = Long.parseLong(headValues.get(0));
-          if(headCount < 0) throw new AvroRuntimeException("--head count must not be negative");
-        } catch(NumberFormatException ex) {
+          if (headCount < 0)
+            throw new AvroRuntimeException("--head count must not be negative");
+        } catch (NumberFormatException ex) {
           nargs.addAll(headValues);
         }
       }

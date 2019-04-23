@@ -19,10 +19,6 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <prerequisites>
-    <maven>3.0.5</maven>
-  </prerequisites>
-
   <parent>
     <groupId>org.apache</groupId>
     <artifactId>apache</artifactId>
@@ -45,6 +41,7 @@
        -->
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <main.basedir>${project.basedir}</main.basedir>
     <avro.distDir>dist</avro.distDir>
     <avro.docDir>build/avro-doc-${project.version}/api</avro.docDir>
     <!-- dependency plugin versions -->
@@ -52,13 +49,15 @@
 
     <!-- plugin versions -->
     <antrun-plugin.version>1.8</antrun-plugin.version>
-    <enforcer-plugin.version>3.0.0-M2</enforcer-plugin.version>
-    <extra-enforcer-rules.version>1.1</extra-enforcer-rules.version>
-    <rat.version>0.13</rat.version>
     <checkstyle-plugin.version>3.0.0</checkstyle-plugin.version>
+    <enforcer-plugin.version>3.0.0-M2</enforcer-plugin.version>
+    <extra-enforcer-rules.version>1.2</extra-enforcer-rules.version>
     <gpg-plugin.version>1.6</gpg-plugin.version>
-    <javadoc-plugin.version>3.0.1</javadoc-plugin.version>
+    <javadoc-plugin.version>3.1.0</javadoc-plugin.version>
+    <maven-plugin-plugin.version>3.6.0</maven-plugin-plugin.version>
+    <rat.version>0.13</rat.version>
     <source-plugin.version>3.0.1</source-plugin.version>
+    <spotless-maven-plugin.version>1.21.1</spotless-maven-plugin.version>
   </properties>
 
   <modules>
@@ -103,12 +102,20 @@
   </mailingLists>
 
   <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>com.diffplug.spotless</groupId>
+          <artifactId>spotless-maven-plugin</artifactId>
+          <version>${spotless-maven-plugin.version}</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
         <version>${enforcer-plugin.version}</version>
-        <inherited>false</inherited>
         <executions>
           <execution>
             <id>enforce</id>
@@ -159,6 +166,13 @@
             <version>${extra-enforcer-rules.version}</version>
           </dependency>
         </dependencies>
+      </plugin>
+      <plugin>
+        <artifactId>maven-plugin-plugin</artifactId>
+        <version>${maven-plugin-plugin.version}</version>
+        <configuration>
+          <goalPrefix>spotless</goalPrefix>
+        </configuration>
       </plugin>
     </plugins>
   </build>
@@ -276,6 +290,7 @@
                 <exclude>**/.gitignore</exclude>
                 <!-- build or test files (some are generated files that we commit as-is for testing purposes) -->
                 <exclude>**/*.log</exclude>
+                <exclude>**/*.rej</exclude>
                 <exclude>build/**</exclude>
                 <exclude>doc/build/**</exclude>
                 <exclude>lang/java/archetypes/**</exclude>
@@ -297,6 +312,7 @@
                 <exclude>lang/java/avro/src/test/java/org/apache/avro/specific/TestRecordWithoutLogicalTypes.java</exclude>
                 <exclude>lang/java/tools/src/test/compiler/output-string/avro/examples/baseball/Player.java</exclude>
                 <exclude>lang/java/tools/src/test/compiler/output-string/avro/examples/baseball/Position.java</exclude>
+                <exclude>lang/java/tools/src/test/compiler/output-string/avro/examples/baseball/FieldTest.java</exclude>
                 <exclude>lang/java/tools/src/test/compiler/output-string/Position.java</exclude>
                 <exclude>lang/java/tools/src/test/compiler/output/Player.java</exclude>
                 <exclude>lang/java/tools/src/test/compiler/output/Position.java</exclude>
@@ -334,10 +350,9 @@
                 <exclude>**/*.iml</exclude>
                 <exclude>lang/csharp/Avro.sln</exclude> <!-- visual studio -->
                 <!-- build-related files -->
-                <exclude>README.md</exclude>
+                <exclude>**/README.md</exclude>
                 <exclude>BUILD.md</exclude>
                 <exclude>.travis.yml</exclude>
-                <exclude>share/precommit/README.md</exclude>
                 <exclude>**/VERSION.txt</exclude>
                 <exclude>**/dependency-reduced-pom.xml</exclude>
                 <exclude>lang/perl/.shipit</exclude>
@@ -355,6 +370,7 @@
                 <exclude>lang/js/test/mocha.opts</exclude>
                 <exclude>lang/csharp/TestResult.xml</exclude>
                 <exclude>lang/csharp/src/apache/*/obj/**</exclude>
+                <exclude>lang/csharp/**/bin/Release/**/Avro.xml</exclude>
                 <exclude>lang/js/coverage/**</exclude>
                 <!-- text documentation files -->
                 <exclude>CHANGES.txt</exclude>
@@ -362,7 +378,6 @@
                 <exclude>lang/perl/Changes</exclude>
                 <exclude>lang/c/README.maintaining_win32.txt</exclude>
                 <exclude>lang/c/docs/index.txt</exclude>
-                <exclude>lang/csharp/README.md</exclude>
                 <exclude>lang/java/archetypes/avro-service-archetype/src/test/integration/projects/basic/archetype.properties</exclude> <!-- used to generate user projects -->
                 <!-- files and directories covered by LICENSE.txt -->
                 <exclude>lang/py/lib/simplejson/**</exclude>
